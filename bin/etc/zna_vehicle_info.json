@@ -1,0 +1,109 @@
+{
+	"Info_type": false,
+	"collect_time": 4,
+	"basic_info": {
+		"ECM_Info": {
+			"EngineRPM": 1,
+			"EngineStatus": 1,
+			"EngineCoolantTemp": 1,
+			"MILLamp": 1,
+			"SVSLamp": 1,
+			"OilPress_Lamp": 1,
+			"UreaLamp": 1,
+			"Filterwater_Det": false,
+			"BatteryCharge_Sts": false
+		},
+		"METER_Info": {
+			"Average_Fuel_Economy": 1,
+			"Distance_to_empty": 1,
+			"Distance_Totalizer": 1,
+			"Fuel_Remain": 1,
+			"TotalOdo_Valid": false,
+			"OilPres": false,
+			"BrakeFailure": 1,
+			"InstandFuel": 1
+		},
+		"BCM_Info": {
+			"front_left_door_status": false,
+			"front_right_door_status": false,
+			"rear_left_door_status": false,
+			"rear_right_door_status": false,
+			"back_door_status": false,
+			"back_door_locked_status": false,
+			"LowBeamRequest": false,
+			"HighBeamRequest": false,
+			"SWIIGK": false,
+			"DoorOpen_Warning": false,
+			"LightOn_Warning": false,
+			"TPMSMIL_Req": 1,
+			"StopLampFailSts": false,
+			"RemoteVecSearchSts": false,
+			"DriverDoorLockSts": false,
+			"KeyAlarmSts": 1,
+			"HoodStatus": false,
+			"AccStatus": false,
+			"remote_enging_run_flag": false
+		},
+		"ACU_Info": {
+			"Airbag_Crash_Order": 1,
+			"AirbagFail_Sts": 12
+		},
+		"ECO_Info": {
+			"rapid_acceleration_count": 1,
+			"rapid_deceleration_count": 2,
+			"sharp_turn_count": 3
+		},
+		"ALARM_Info": {
+			"alarm_type": 1,
+			"alarm_typeEx": "none",
+			"Transmitter_Fail": 3,
+			"LowTirePressure": 4,
+			"ZNA_P15MC": 5
+		},
+		"PEPS_Info": {
+			"RemoteFeedback_Sts": 1,
+			"RemotePEPS_Mode": 2,
+			"RemoteEngineRun_Cnt": 3,
+			"PEPS_PDU": 4,
+			"PEPS_Bluetooth": true,
+			"PEPS_MeterAlarm": 6
+		},
+		"ESP_Info": {
+			"ESP_Lamp": 1,
+			"ABS_Lamp": 2,
+			"HAZ_Active": true,
+			"VehicleSpeed_Valid": true,
+			"LongAccel": 5,
+			"VehicleSpeed": 6,
+			"EBD_Lamp": 7,
+			"ABS_Acitve": true
+		},
+		"EPB_Info": {
+			"EPB_FailStatus": 1
+		},
+		"TCU_Info": {
+			"TCU_Fault": 1,
+			"GearSelect_Pos": 2,
+			"Driving_Mode": 3
+		},
+		"AWD_Info": {
+			"AWD_Mode": 1
+		},
+		"AC_Info": {
+			"AC_OnState": true,
+			"AirDistribution_Mode": 2,
+			"ACInsideSen_Temp": 3
+		},
+		"SAS_Info": {
+			"SteeringAngel": 1,
+			"SteeringAngel_Velocity": 2
+		},
+		"EPS_Info": {
+			"EPS_FaultStates": 1
+		}
+	},
+	"time_stamp": 4,
+	"IgnOnTag": 5,
+	"EF82": 6,
+	"Version": "7"
+}

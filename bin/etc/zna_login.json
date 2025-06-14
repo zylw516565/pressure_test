@@ -1,0 +1,16 @@
+{
+	"tcu_device_sn": "NA24C08BV00012",
+	"da_device_sn": "G8880N02F5BB01KL00035",
+	"vin": "LJNTGUC57NN265901",
+	"iccid": "89860921730018175207",
+	"imsi": "460099003700927",
+	"imei": "863841054764561",
+	"software_version": "2.0.03_02",
+	"hardware_version": "DFL_RTM_V0.2",
+	"g4_version": "2.0.03_01",
+	"vehicle_type": "22ZTMC0A",
+	"upgrading": false,
+	"bcm_reg_status": true,
+	"ota_algrithom": 14,
+	"time_stamp": 9
+}

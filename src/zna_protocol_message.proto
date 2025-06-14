@@ -1,0 +1,764 @@
+/*
+    MCU与后台通讯协议
+*/
+
+package zna.protocol;
+/*枚举类型*/
+enum RspCode
+{
+    FAILED	= 0; //失败
+    SUCCESS = 1; //成功
+}
+
+message UpgradeInfo
+{
+  required string filetype = 1; // 文件类型, TCU, MCU
+  required string filepath = 2; // 文件路径, 如http://www.aa.com/tcu531.zip
+  required string version = 3;  // 升级版本
+  required uint32 filesize = 4; // 升级文件大小
+  required bytes  md5 = 5;      // 升级文件md5值
+  optional string rc4 = 6;      // 升级文件rc4密钥
+  optional bytes  sign_md5 = 7; // 升级文件MD5值签名
+  optional bytes  sha2 = 8;      // 升级文件SHA2值
+  optional string aes128 = 9;      // 升级文件AES128密钥
+  optional bytes  sign_sha2 = 10;  // 升级文件SHA2值签名
+  optional uint32 prefilesize = 11; // 升级文件大小（加密前大小）
+  optional uint32 encrypt_type = 12;    //加密类型，0x00表示rc4加密，0x80表示AES加密
+}
+
+/*消息体*/
+//5.2.3.1	T-BOX向监控平台发送注册请求 0x0601
+message LoginReq
+{
+    required string tcu_device_sn = 1; //TCU设备序列号
+    required string da_device_sn = 2; //DA设备序列号
+    required string vin = 3; // vin码
+    required string iccid = 4; //sim卡的iccid号
+    required string imsi	= 5; //sim卡的imsi号
+    required string imei	= 6; //通讯模块的imei号
+    required string software_version = 7; //软件版本号
+    required string hardware_version = 8; //硬件版本号
+    required uint32 time_stamp = 9; //当前时间戳
+    optional string g4_version = 10; //4G模块版本号
+    optional string vehicle_type = 11; //车型，531MC ,322,331
+    optional bool   upgrading = 12; // 是否正在升级
+	optional bool bcm_reg_status = 13;  // T-BOX与BCM的注册状态
+	optional uint32 ota_algrithom = 14;	//OTA加密算法类型，0x00表示rc4加密，0x80表示AES加密
+}
+
+//5.2.3.2	监控平台响应注册请求 0x8601
+message LoginRsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 time_stamp = 2; //当前时间戳
+
+    repeated UpgradeInfo upgradeinfo = 3; // 版本升级信息，TCU,MCU
+}
+
+//5.4.3.1	T-BOX发送心跳请求 0x0701
+message HeartbeatReq
+{
+    required uint32 time_stamp = 1; //当前时间戳
+}
+
+//5.4.3.2	监控平台的心跳响应 0x8701
+message HeartbeatRsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 time_stamp = 2; //当前时间戳
+}
+
+
+//5.5.3.1	T-BOX收到远传RSA公钥后向监控平台应答 0x0801
+/*
+message SendRSARsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 wait_time = 2; //等待时间，表示T-BOX收到远传RSA公钥后的应答到发送远传RC4密钥之间的时间间隔，例子：0x3E8 表示1000ms
+    required uint32 time_stamp = 3; //当前时间戳
+}
+*/
+
+//5.5.3.2	监控平台向T-BOX发送远传RSA公钥 0x8801
+message SendRSAReq
+{
+    required uint32 N_len = 1; // RSA加密算法使用的N值数据长度
+    required string N_string = 2; // RSA加密算法使用的N值数据内容
+    required uint32 E1_len = 3; // RSA加密算法生成的公钥E1数据长度
+    required string E1_string = 4; // RSA加密算法生成的公钥E1数据内容
+    required uint32 time_stamp = 5; //当前时间戳
+}
+
+
+//5.5.3.3	T-BOX向监控平台发送远传RC4密钥 0x0802
+/*
+message SendRC4Req
+{
+    required uint32 serial_number = 1; //按密钥更新顺序生成的密钥流水号
+    required uint32 key_len = 2; // RC4密钥数据原始长度
+    required string key = 3; // RC4密钥数据内容
+    required uint32 time_stamp = 4; //当前时间戳
+}
+*/
+
+//5.5.3.4	监控平台收到远传RC4密钥后向T-BOX应答 0x8802
+message SendRC4Rsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 serial_number = 2; //按密钥更新顺序生成的密钥流水号
+    required uint32 time_stamp = 3; //当前时间戳
+}
+
+//5.7.3.1	T-BOX响应监控平台的配置请求 0x0A01
+message SetParameterRsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 time_stamp = 2; //当前时间戳
+}
+
+//5.7.3.2	监控平台对T-BOX进行参数配置 0x8A01
+message SetParameterReq
+{
+    required uint32 local_storage_cycle = 1; //本地存储时间周期
+    required uint32 upload_data_cycle_normal = 2; //正常时整车信息上报时间周期
+    required uint32 upload_GPS_cycle_normal = 3; //正常时GPS信息上报时间周期
+    required uint32 upload_data_cycle_alarm = 4; //报警时整车信息上报时间周期
+    required uint32 upload_GPS_cycle_alarm = 5; //报警时GPS信息上报时间周期
+    // 以下不设置
+    optional uint32 heartbeat_cycle = 6; //心跳发送周期
+    optional uint32 server_response_timeout = 7; //平台应答超时时间
+    optional uint32 box_response_timeout = 8; //终端应答超时时间
+
+    optional bool   FlowControlSwitch = 9;    //历史数据流量控制开关, NULL或false:不控制，true: 控制流量(不上传)
+	optional uint32 GPSconversion = 10; 			//GPS数据转换标志
+}
+
+//5.7.3.3	T-BOX响应监控平台的查询信息请求 0x0A02
+message GetParameterRsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 local_storage_cycle = 2; //本地存储时间周期
+    required uint32 upload_data_cycle_normal = 3; //正常时整车信息上报时间周期
+    required uint32 upload_GPS_cycle_normal = 4; //正常时GPS信息上报时间周期
+    required uint32 upload_data_cycle_alarm = 5; //报警时整车信息上报时间周期
+    required uint32 upload_GPS_cycle_alarm = 6; //报警时GPS信息上报时间周期
+    required uint32 heartbeat_cycle = 7; //心跳发送周期
+    required uint32 server_response_timeout = 8; //平台应答超时时间
+    required uint32 box_response_timeout = 9; //终端应答超时时间
+    required string firmware_version = 10; //固件版本
+    required string hardware_version = 11; //硬件版本
+    required uint32 time_stamp = 12; //当前时间戳
+}
+
+
+//5.7.3.4	监控平台查询T-BOX信息 0x8A02
+message GetParameterReq
+{
+    required uint32 time_stamp = 1; //当前时间戳
+}
+
+//5.7.3.5	T-BOX向监控平台发送整车数据 0x0B03
+//ECM信息
+message ECM_Info
+{
+    optional uint32 EngineRPM = 1; //发动机转速
+    //optional uint32 RawSensor = 2; //加速踏板行程
+    //optional uint32 ClutchSwitch	= 3; //离合踏板
+    optional uint32 EngineStatus = 4; //发动机状态
+    optional uint32 EngineCoolantTemp = 5; //发动机冷却液温度
+    //optional uint32 FuelConsumption = 6; //瞬时油耗
+    //optional bool DiagMuxOn = 7; //CAN屏蔽信号
+    //optional bool EconomyModeLamp = 8; //ECO指示灯
+    //optional uint32 CO2_Content	= 9; //二氧化碳
+    //optional uint32 CO_Content = 10;   //一氧化碳
+    //optional uint32 HC_Content = 11; //碳氢化合物
+    //optional uint32 O2_Content = 12;   //氧气
+	//optional uint32 ACHighPressureSensor = 13; //交流高压传感器数值	
+	//optional uint32 CruiseControlStatus = 14;		//巡航控制状态
+	//optional uint32 EngineThrottlePosition = 15;		//发动机节气门位置
+	//optional uint32 MeanEffectiveTorque = 16;		//平均有效扭矩
+	//optional uint32 Fuel_Consumption_Fine = 17;     //瞬时油耗
+	//optional uint32 SOF_V1 = 18; 			// cracking 最低电压
+	//optional uint32 SOF_V1_State = 19; 	// SOF状态档位 
+	//optional uint32 Vbmin = 20;				//Vbmin 最低电压
+	optional uint32 MILLamp = 21; //MIL指示灯
+	optional uint32 SVSLamp = 22; //SVS指示灯
+	optional uint32 OilPress_Lamp = 23; //机油压力警告灯
+	optional uint32 UreaLamp = 24; //AUS指示灯
+	optional bool Filterwater_Det = 25; //油水分离指示灯
+	optional bool BatteryCharge_Sts = 26; //蓄电池充电状态
+}
+
+//METER信息
+message METER_Info
+{
+    //optional uint32 VehicleSpeed_CLUSTER = 1; //车速
+    optional uint32 Average_Fuel_Economy = 2; //平均油耗
+    optional uint32 Distance_to_empty = 3; //续航里程
+    optional uint32 Distance_Totalizer = 4; //行使总里程
+    optional uint32 Fuel_Remain = 5; //剩余油量
+    //optional uint32 Fuel_Warning_lamp = 6; //油量警报
+    //optional uint32 Average_Fuel_Economy_Single = 7; //单次行程平均油耗
+    //optional uint32 EPB_Status = 8;//EPKB应用状态
+	//optional uint32 APB_StatusFlag = 9; //手刹状态
+	//optional uint32 ParkingBrakeMalfunctionDisplay = 10; //驻车制动故障状态
+	//optional uint32 ParkingBrakeBindingStatusDisplay = 11; //驻车制动状态
+	//optional uint32 Fuellow = 12; //低油量报警
+	optional bool TotalOdo_Valid = 13; //总里程有效位
+	optional bool OilPres = 14; //机油压力指示灯
+	optional uint32 BrakeFailure = 15; //制动故障指示灯
+	optional uint32 InstandFuel = 16; //瞬时油耗
+
+}
+
+
+//BCM信息
+message BCM_Info
+{
+    //optional bool TrunkSwitchStatus = 1; //后备箱状态
+    //optional uint32 BCM_WakeUpSleepCmd = 2 ;// BCM睡眠唤醒指令
+    optional bool front_left_door_status = 3; //左前门状态
+    optional bool front_right_door_status = 4; //右前门状态
+    optional bool rear_left_door_status = 5; //左后门状态
+    optional bool rear_right_door_status = 6; //右后门状态
+    optional bool back_door_status = 7; //后门状态
+    //optional bool door_lock_status = 8; //四门锁状态
+    optional bool back_door_locked_status = 9; //后门锁状态
+    optional bool LowBeamRequest = 10; //近光灯状态
+    //optional uint32 FlashingIndicatorStatus = 11; //闪光灯状态
+    optional bool HighBeamRequest = 12; //远光灯状态
+    //optional bool PositionLightsRequest = 13; //示宽灯状态
+    //optional bool FrontFogLightsRequest = 14; //前雾灯状态
+    //optional bool RearFogLightStatus = 15; //后雾灯状态
+    //optional bool DayTimeRunningLightRequest = 16; //日间行驶灯状态
+    //optional uint32 front_right_window_status = 17; //右前窗状态
+    //optional uint32 front_left_window_status = 18;  //左前窗状态
+    //optional uint32 rear_right_window_status = 19;  //右后窗状态
+    //optional uint32 rear_left_window_status = 20;   //左后窗状态	
+    //optional bool remote_enging_run_flag = 21;      //远程启动发动机标志位
+    //optional bool sunroof_window_status = 22;       //天窗玻璃状态	
+    //optional bool sunroof_shade_status = 23;        //天窗遮阳板状态
+    //optional uint32 RES_FailureFeedback = 24;       //远程启动失败原因反馈
+    //optional bool isFindcarBreaked = 25;            //远程寻车是否被打断
+    //optional uint32 RES_Status = 26;                //远程启动状态反馈
+    //optional uint32 Last_obstacle_notification = 27;     //车窗防夹状态
+    //optional uint32 SR_Motor_State = 28;            //天窗电机状态
+    //optional uint32 Shade_Motor_State = 29;         //天窗遮阳帘电机状态
+    //optional uint32 Shade_Area = 30;                //天窗遮阳帘开闭状态
+    //optional uint32 BCM_SR_Degrade_Mode = 31;       //天窗故障
+    //optional uint32 BCM_Shade_Degrade_Mode = 32;    //天窗遮阳帘故障
+    //optional uint32 RESPreSoak_SmartphoneError = 33;//远程启动发动机错误状态
+    //optional uint32 LeftTimeDuringThisRESCycle = 34;//远程启动发动机运行剩余时间
+    //optional uint32 RearWiperStatus = 35;           //后刮水器状态
+    //optional uint32 DriveModeRequest = 36;          //驾驶模式
+    //optional uint32 ChildLockStateDisplay = 37;     //童锁状态
+    //optional uint32 ClutchSwitchMaximumTravel = 38; //离合器最大行程
+    //optional uint32 ClutchSwitchMinimumTravel = 39; //离合器最小行程
+	//optional uint32 RLS_Rain = 40;					//下雨信号
+	//optional uint32 SunShadePosition = 41;			    //遮光帘状态
+	//optional uint32 WindowsPostion_FL = 42;		        //左前车窗状态
+	//optional uint32 WindowsPostion_FR = 43;		        //右前车窗状态
+	//optional uint32 WindowsPostion_RL = 44;		        //左后车窗状态
+	//optional uint32 WindowsPostion_RR = 45;		        //右后车窗状态
+	//optional uint32 RearDefrostEngaged = 46;		    //后除霜状态 
+	//optional uint32 PassengerDoorLockedStatus = 47;		//副驾驶门锁状态
+	//optional uint32 RearLeftDoorLockedStatus = 48;		//后左门锁状态
+	//optional uint32 RearRightDoorLockedStatus = 49;		//后右门锁状态
+	//optional uint32 SunRoofPosition= 50;			    //天窗状态
+	optional bool SWIIGK = 51; //点火状态
+	optional bool DoorOpen_Warning = 52; //门未关报警信号
+	optional bool LightOn_Warning= 53; //灯未关报警信号
+	optional uint32 TPMSMIL_Req= 54;   //胎压报警信号
+	optional bool StopLampFailSts= 55; //制动灯故障状态
+	optional bool RemoteVecSearchSts=56; //远程寻车状态
+	optional bool DriverDoorLockSts = 57;//驾驶位门锁状态
+	optional uint32 KeyAlarmSts = 58;//警戒状态信息
+	optional bool HoodStatus = 59;//引擎盖状态
+	optional bool AccStatus = 60;//硬线ACC状态
+	optional bool remote_enging_run_flag = 61;//远程启动发动机标志位
+}
+
+//ACU信息
+message ACU_Info
+{
+    optional uint32 Airbag_Crash_Order = 1; //安全气囊状态
+	//optional uint32 DriverSafetyBeltBuckleState = 2;			//主驾安全带状态
+	//optional uint32 PassengerSafetyBeltBuckleState = 3;		//副驾安全带状态
+	//optional uint32 SecondRowCenterSafetyBeltState = 4; 	//后排中部安全带状态
+	//optional uint32 SecondRowLeftSafetyBeltState = 5;		//后排左侧安全带状态
+	//optional uint32 SecondRowRightSafetyBeltState = 6;		//后排右侧安全带状态
+	//optional uint32 PassengerPresenceState = 7;			//副驾乘客存在状态
+	//optional uint32 SecondRowCenterPresenceState = 8;		//后排中部乘客存在状态
+	//optional uint32 SecondRowLeftPresenceState = 9;		//后排左侧乘客存在状态
+	//optional uint32 SecondRowRightPresenceState = 10;		//后排右侧乘客存在状态
+	//optional uint32 FrontPassengerSafetyBeltReminder = 11;	//副驾安全带提醒
+	optional uint32 AirbagFail_Sts = 12; //安全气囊控制器故障状态
+}
+
+//驾驶评价信息
+message ECO_Info
+{
+    optional uint32 rapid_acceleration_count = 1; //急加速 
+    optional uint32 rapid_deceleration_count = 2; //急减速
+    optional uint32 sharp_turn_count = 3; //急转弯 
+}
+
+//告警信息
+message ALARM_Info
+{
+    optional uint32 alarm_type = 1; 				//报警类型
+	optional bytes alarm_typeEx = 2; 				//扩展报警类型
+	optional uint32 Transmitter_Fail = 3;			//胎压传感器故障
+	optional uint32 LowTirePressure = 4;			//胎压低故障
+	optional uint32 ZNA_P15MC = 5;                  //为郑州日厂P15MC新增字段
+}
+
+//PEPS信息
+message PEPS_Info
+{
+	optional uint32 RemoteFeedback_Sts= 1;//远程异常状态反馈
+	optional uint32 RemotePEPS_Mode= 2;//远程状态模式
+	optional uint32 RemoteEngineRun_Cnt= 3;//远程发动机启动剩余时间
+	optional uint32 PEPS_PDU= 4;// 整车系统电源状态
+	optional bool PEPS_Bluetooth = 5;// PEPS与TBOX蓝牙钥匙认证状态
+	optional uint32 PEPS_MeterAlarm = 6;// IC报警信号
+}
+
+//ESP信息
+message ESP_Info
+{
+	optional uint32 ESP_Lamp = 1; //ESP状态指示灯
+	optional uint32 ABS_Lamp = 2; //ABS状态指示灯
+	optional bool HAZ_Active = 3; //紧急刹车灯激活
+	optional bool VehicleSpeed_Valid = 4; //车速信号有效性
+	optional uint32 LongAccel = 5; //纵向加速度
+	optional uint32 VehicleSpeed = 6; //车速信号
+	optional uint32 EBD_Lamp = 7; //EBD状态指示灯
+	optional bool ABS_Acitve = 8; //ABS功能
+}
+
+//EPB信息(EPB车型有，机械手刹车型无)
+message EPB_Info
+{
+	optional uint32 EPB_FailStatus = 1; //EPB故障状态
+}
+
+//TCU信息(AT车型有，MT车型无)
+message TCU_Info
+{
+	optional uint32 TCU_Fault = 1; //TCU错误状态
+	optional uint32 GearSelect_Pos = 2; //档位状态
+	optional uint32 Driving_Mode = 3; //驾驶模式
+}
+
+//AWD信息(四驱车有，两驱车无)
+message AWD_Info
+{
+	optional uint32 AWD_Mode= 1; //四驱系统状态
+}
+
+//AC信息
+message AC_Info
+{
+	optional bool AC_OnState = 1; //空调开启状态
+	optional uint32 AirDistribution_Mode= 2; //空调吹风模式
+	optional uint32 ACInsideSen_Temp = 3; //车内温度
+}
+
+//SAS信息
+message SAS_Info
+{
+	optional uint32 SteeringAngel = 1; //转角信号
+	optional uint32 SteeringAngel_Velocity= 2; //转角速率
+}
+
+//基本整车数据
+message Basic_Info
+{
+    optional ECM_Info ecm_info = 1; //ECM信息
+    //optional ABSVDC_Info absvdc_info = 2; // ABSVDC信息
+    optional METER_Info meter_info = 3; //METER信息
+    optional BCM_Info bcm_info = 4; //BCM信息
+    optional ACU_Info acu_info = 5; // ACU信息
+    //optional AT_Info at_info = 6; // AT信息
+    //optional STRG_Info strg_info = 7; // STRG信息
+    //optional EPS_Info eps_info = 8; // EPS信息
+    //optional USM_Info usm_info = 9; // USM信息
+    //optional TPMS_Info tpms_info = 10; //TPMS信息
+    //optional WIRE_Info wire_info = 11; //硬线信号
+    optional ECO_Info eco_info = 12; //驾驶评价信息
+    optional ALARM_Info alarm_info = 13; //告警信息
+    //optional ITM_Info itm_info = 14; //ITM信息
+    //optional IKEY_Info ikey_info = 15; //IKEY信息
+    //optional COMMON_Info common_info = 16;  //公共信息
+    //optional SBOX_info sbox_info = 17;  //SBOX信息
+	//optional HVAC_Info hvac_info= 18;  //HVAC信息
+	//optional DVR_Info dvr_info = 19; //DVR信息
+	optional PEPS_Info peps_info = 20; //PEPS信息
+	optional ESP_Info esp_info = 21; //ESP信息
+	optional EPB_Info epb_info = 22; //EPB信息
+	optional TCU_Info tcu_info = 23; //TCU信息
+	optional AWD_Info awd_info = 24; //AWD信息
+	optional AC_Info ac_info = 25; //AC信息
+	optional SAS_Info sas_info = 26; //SAS信息
+    optional FCM_Info fcm_info = 27; //FCM信息
+    optional EPS_Info eps_info = 28; //EPS信息
+    optional ELD_Info eld_info = 29; //ELD信息
+    optional ECU_Info ecu_info = 30; //ECU信息
+}
+
+message Vehicle_Info
+{
+    required bool Info_type = 1; //数据类型 0：实时数据 1：历史数据
+    required uint32 collect_time = 2; //采集数据时间
+    required Basic_Info basic_info = 3; //基本整车数据
+    required uint32 time_stamp = 4; //当前时间戳
+    optional uint32 IgnOnTag = 5; //IGN打开一次的或一个行程标志
+    optional uint32 EF82 = 6; //各节点掉线情况
+    optional string Version = 7; //版本号
+}
+
+
+//5.7.3.6	监控平台收到整车数据的应答 0x8B03
+message Vehicle_InfoRsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 time_stamp = 2; //当前时间戳
+}
+
+//5.7.3.7	T-BOX向监控平台发送GPS数据 0x0A04
+message Location_Info
+{
+    required bool Info_type = 1; //数据类型 0：实时数据 1：历史数据
+    //required uint32 collect_time = 2; //采集数据时间
+    required uint32 location_status = 3; //定位状态
+    required uint32 longitude = 4; //经度
+    required uint32 latitude = 5; //纬度
+    //required uint32 speed = 6; //速度
+    //required uint32 direction = 7; //方向
+    required uint32 time_stamp = 8; //当前时间戳
+	optional uint32 isGPSconversion = 9; //GPS数据是否经过转换
+	required uint64 gps_time = 10; //GPS定位时间
+	required uint32 height_valid = 11; //GPS海拔高度有效性
+	required uint32 height_data = 12; //GPS海拔高度
+
+}
+
+//5.7.3.8	监控平台收到GPS数据的应答 0x8A04
+message Location_InfoRsp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 time_stamp = 2; //当前时间戳
+}
+
+//5.7.3.11	T-BOX发送车辆反控结果 0x0A06
+message RemoteControlResultRsp
+{
+    required uint32 control_type = 1; //反控命令
+    required uint32 control_value = 2; //反控参数
+    required uint32 serial_number = 3; //反控流水号
+    required uint32 control_result = 4; //异常应答码 
+    required uint32 time_stamp = 5; //当前时间戳
+}
+
+//5.7.3.12	监控平台车辆反控请求 0x8A06
+message RemoteControlReq
+{
+    required uint32 control_type = 1; //反控命令
+    required uint32 control_value = 2; //反控参数
+    required uint32 serial_number = 3; //反控流水号
+    required uint32 time_stamp = 4; //当前时间戳
+    optional string signal_data = 5; //签名数据
+}
+
+//5.8.3.13	T-BOX发送流量统计请求 0x0A07
+//数据为空
+//5.8.3.14	监控发送流量统计 0x8A07
+message FlowCountRsp
+{
+    required uint32 dataAllowance = 1;// 可用套餐流量（单位KB）
+    required uint32 dataUsage  = 2;// 已用流量（单位KB）
+    required uint32 dataAvailable = 3;// 剩余套餐流量（单位KB）
+}
+
+//5.8.3.15	TBOX发送流量报警设置信息 0x0A08
+message FlowCountLimitReq
+{
+    required uint32 limitVal      = 1;// 流量上限值
+}
+//5.8.3.16	监控平台发送报警 0x8A08
+//数据为空
+
+
+//5.8.3.19	终端管理模式监控平台向T-BOX发送升级控制命令 0x8C01
+message OtaUpgradeReq
+{
+    repeated UpgradeInfo upgradeinfo = 1; // 版本升级信息，4G,MCU
+    required uint32 serial_number = 2; // 反控流水号
+    required uint32 time_stamp = 3; // 当前时间戳
+}
+//5.8.3.20	终端管理模式T-BOX响应监控平台发送升级控制命令 0x0C01
+message OtaUpgradeRsp
+{
+    required uint32 errcode = 1; //异常应答码（0--TCU接受升级，1--处于IGN ON 状态，不允许升级，  2--FLASH 擦写次数达到上限,不允许升级，3--FLASH 擦写次数记录异常，不允许升级  
+                                 //            4--电池电压不处于正常状态，不允许升级 5--TCU已处于升级，不接受本次升级命令 6--TCU 升级模块运行出错）
+	required uint32 time_stamp = 2;       // 当前时间戳
+	required uint32 serial_number = 3;    // 升级流水号
+}
+
+//5.8.3.21	终端管理模式监控平台向T-BOX发送取消TCU升级请求 0x8C02
+//5.8.3.22	终端管理模式T-BOX向监控平台发送取消TCU升级响应 0x0C02
+message CancelOtaUpgradeRsp
+{
+    required uint32 errcode = 1; //异常应答码（errcode：0--成功，1--失败）
+}
+
+/*枚举类型*/
+enum UpgradeProgressCodeType
+{
+    DOWNLOADING_UPGRADE_PACK        = 0; // 正在下载升级包
+	DOWNLOAD_UPGRADE_PACK_RESULT    = 1; // 下载升级包结果（errcode：0--成功，1--失败）
+	BACKUPING_MCU_APP               = 2; // 正在备份MCU APP
+	BACKUP_MCU_APP_RESULT           = 3; // 备份MCU APP	结果（errcode：0--成功，1--失败）
+	START_UPGRADE                   = 4; // 开始升级（errcode：0-- 开始启动升级，1--TCU当前条件不满足，取消升级;）
+    UPGRADE_RESULT                  = 5; // 升级结果（errcode：0--成功，1--失败）
+	WAITING_UPDATE_CONDITION_SLEEP  = 6; // 等待休眠条件
+}
+//5.8.3.23	T-BOX向监控平台发送升级进度 0x0C03
+message OtaUpgradeProgressReq
+{
+    required UpgradeProgressCodeType UpgradeProgressCode = 1; //升级进度
+    optional uint32 errcode                              = 2; //异常应答码
+}
+//5.8.3.24	监控平台向T-BOX发送升级进度响应 0x8C03
+//数据为空
+
+
+//6.9.3.1
+message CertCom
+{
+    required uint32 serial_number   = 1;		//流水号
+    required uint32 cur_cert_id     = 2;		//当前证书ID
+    required uint32 data_status     = 3;		//数据加密/签名状态
+    required uint32 cmd_id		 	= 4;		//命令ID(1:申请证书;2.下发证书;3:上报证书状态)\
+    required string dcm_no 			= 5;		//设备类型
+    optional uint32 errcode		 	= 6;		//错误码(响应包填充错误:下载证书成功、失败；接收状态成功失败)
+    required bytes data_info		= 7;		//PB格式化数据
+    optional bytes sign_data		= 8;		//签名数据
+}
+
+//TBOX向后台发送证书请求
+message TCUCertApply_Req
+{
+    required uint32 time_stamp 		= 1;		//当前时间戳
+	required string vin 			= 2;		//车辆VIN码
+	required uint32 cert_status		= 3;		//当前证书状态
+	required uint32 duration		= 4;		//有效时长
+	required bytes  p10_csr			= 5;		//证书请求文件
+	optional bytes  cst_sign_data	= 6;        //证书请求签名数据   p10_sign_data    = 6;     //对p10数据签名后的数据
+	optional string cert_format	    = 7;		//证书格式
+	optional uint32 sign_type	    = 8;		//验签方式
+}
+
+//监控平台收到证书申请请求的应答(errcode赋值0)
+message TCUCertApply_Rsp    
+{
+	required uint32 time_stamp 		= 1;		//当前时间戳
+	optional uint32 recv_status		= 2;		//接收状态
+}
+
+//监控平台下发证书到TBOX
+message CertIssue_Req
+{
+	required uint32 time_stamp 			= 1;		//当前时间戳
+	required uint32 cert_apply_status 	= 2;		//证书申请状态
+	optional uint32 apply_cert_id 		= 3;		//申请证书ID
+	optional bytes cert_data			= 4;		//证书数据
+}
+
+//TBOX收到下发证书的响应
+message CertIssue_Rsp
+{
+	required uint32 time_stamp 			= 1;		//当前时间戳
+	required uint32 cert_recv_status 	= 2;		//证书接收状态
+	optional uint32 apply_cert_id 		= 3;		//申请证书ID
+}
+
+
+//10.1 安全认证登录请求，TCU向平台发送登录请求 0x0602
+message RSALoginReq
+{
+    required string tcu_device_sn = 1;    //TCU设备序列号
+    required string imsi          = 2;    //sim卡的imsi号
+    required string imei          = 3;    //通讯模块的imei号 
+    required string software_version = 4; //软件版本号
+    required string hardware_version = 5; //硬件版本号
+    required uint32 time_stamp = 6;       //当前时间戳
+    optional string g4_version = 7;       //4G模块版本号
+    optional string vehicle_type = 8;     //车型，531MC ,322  
+}
+
+
+//10.2 平台向TCU 返回RSA公钥信息  0x8602
+message SendRSARsp
+{
+    required uint32 errcode = 1; //异常应答码 0为正常，需返回RSA
+    optional uint32 N_len = 2; // RSA加密算法使用的N值数据长度
+    optional bytes N_string = 3; // RSA加密算法使用的N值数据内容
+    optional uint32 E1_len = 4; // RSA加密算法生成的公钥E1数据长度
+    optional bytes E1_string = 5; // RSA加密算法生成的公钥E1数据内容
+    //required uint32 time_stamp = 6; //当前时间戳
+}
+
+//10.3 TCU 用RSA公钥加密后发送到平台 (RC4,VIN，ICCID,DA_SN)  0x0603
+message SendRC4Req
+{
+    required string da_device_sn = 1; //DA设备序列号
+    required string vin = 2;          // vin码
+    required string iccid = 3;        //sim卡的iccid号
+    required uint32 serial_number = 4; //按密钥更新顺序生成的密钥流水号
+    required uint32 key_len = 5; // RC4密钥数据原始长度
+    required bytes key = 6; // RC4密钥数据内容
+    //required uint32 time_stamp = 7; //当前时间戳
+    optional bool   upgrading = 7;        // 是否正在升级
+    optional bool   bcm_reg_status = 8;   // T-BOX与BCM的注册状态
+	//optional string VehicleConfig = 9;		//车辆配置信息 v2.05					
+	//optional string TCUConfig = 10; 		//TCU配置信息  v2.05
+}
+
+//10.4 在加密登录过程中，平台向TCU发送登录成功或出错信息  0x8603
+message SendRC4Resp
+{
+    required uint32 errcode = 1; //异常应答码
+    required uint32 serial_number = 2; //SendRC4Req上传的流水号
+    required uint32 time_stamp = 3; //当前时间戳,TCU可做为同步时间
+    repeated UpgradeInfo upgradeinfo = 4; // 版本升级信息，TCU,MCU
+}
+
+//5.8.3.25	T-BOX向监控平台发送DVR唤醒应答 0x0A0A
+message WakeUpDVRRsp
+{
+    required uint32 serial_number = 1; //流水号
+    required uint32 control_result = 2; //异常应答码 0-失败 1-成功
+}
+
+//5.8.3.26	监控平台向T-BOX发送DVR唤醒请求 0x8A0A
+message WakeUpDVRReq
+{
+    required uint32 serial_number = 1; //流水号
+    required uint32 time_stamp = 2; //当前时间戳
+}
+
+//5.8.3.27	 T-BOX向监控平台发送故障检测应答 0x0A09
+enum RmtDiagRspCode
+{
+    RMT_FAILED		= 0; //远程诊断失败
+    RMT_SUCCESS 	= 1; //远程诊断成功
+    RMT_DIAGNOSING	= 2; //TCU收到远程诊断要求，即将开始诊断
+    RMT_DIAGNOSED	= 3; //TCU正在进行诊断，请稍等
+}
+message RmtDiagRsp
+{
+    required RmtDiagRspCode result = 1; //远程诊断结果
+    required uint32 serial_number = 2; //诊断流水号
+    required uint32 time_stamp = 3; //当前时间戳
+    optional bytes Diag_AVM = 4; // AVM的故障信息
+    optional bytes Diag_SONAR = 5; // SONAR的故障信息
+    optional bytes Diag_BSW = 6; // BSW的故障信息
+    optional bytes Diag_ECM = 7; // ECM的故障信息
+    optional bytes Diag_TCM = 8; // TCM的故障信息
+    optional bytes Diag_USM = 9; // USM的故障信息
+    optional bytes Diag_BCM = 10; // BCM的故障信息
+    optional bytes Diag_FEB_CAMERA = 11; // FEB_CAMERA的故障信息
+    optional bytes Diag_FEB_RADAR = 12; // FEB_RADAR的故障信息
+    optional bytes Diag_DVR = 13; // DVR的故障信息
+    optional bytes Diag_VDC = 14; // VDC的故障信息
+    optional bytes Diag_EPS = 15; // EPS的故障信息
+    optional bytes Diag_GW = 16; // GW的故障信息
+    optional bytes Diag_TPMS = 17; // TPMS的故障信息
+    optional bytes Diag_METER = 18; // AVM的故障信息
+    optional bytes Diag_TCU = 19; // TCU的故障信息
+    optional bytes Diag_ACU = 20; // ACU的故障信息
+    optional bytes Diag_DA = 21; // DA的故障信息
+}
+
+//5.8.3.28	 监控平台向T-box发送远程诊断请求 0x8A09
+message RmtDiagReq
+{
+    required uint32 serial_number = 1; //诊断流水号
+    required uint32 time_stamp = 2; //当前时间戳
+}
+
+//T-BOX向监控平台发送故障清单 0x0A10
+message Fault_List_info
+{
+    optional uint32 Fault_List_one = 1; //故障清单
+}
+
+//监控平台向T-BOX发送故障清单响应0x8A10
+//数据为空
+
+////监控平台下发扩展控制应答（含蓝牙钥匙功能）  0x0A0E
+message FourGExtendCmdRsp
+{
+    required uint32 serial_number = 1;  // 流水号
+    required uint32 time_stamp    = 2;  // 当前时间戳
+    required uint32 commander_id  = 3; 	// 命令ID       
+    required bytes result_info    = 4; 	// 命令处理结果序列化数据 
+}
+
+//监控平台下发扩展控制请求（含蓝牙钥匙功能）  0x8A0E
+message FourGExtendCmdReq
+{
+    required uint32 serial_number 	= 1;  // 流水号
+    required uint32 time_stamp		= 2;     // 当前时间戳
+    required uint32 commander_id	= 3;   // 命令ID       
+    required bytes  result_info		= 4;    // 命令处理结果序列化数据 
+}
+
+//0x0A0F
+message TCUExtendCmdReq
+{
+    required uint32 serial_number   = 1;    // 流水号
+    required uint32 time_stamp      = 2;    // 当前时间戳
+    required uint32 commander_id    = 3;    // 命令ID 
+    required bytes  result_info     = 4; 	// 命令处理结果序列化数据
+}
+//平台诊断请求参数    			0x8A0F
+message TCUExtendCmdRsp
+{
+    required uint32 serial_number = 1;  // 流水号
+    required uint32 time_stamp    = 2;  // 当前时间戳
+    required uint32 commander_id  = 3; 	// 命令ID       
+    required bytes result_info    = 4; 	// 命令处理结果序列化数据 
+}
+
+
+//FCM信息
+message FCM_Info
+{
+optional uint32 FCM_LKA_Sys_state = 1; //车道保持系统状态
+optional uint32 FCM_ACC_SysFailure= 2; //ACC自适应巡航系统状态
+optional uint32 FCM_AEB_Failinfo = 3; //主动刹车系统状态
+}
+
+
+//EPS信息
+message EPS_Info
+{
+optional uint32 EPS_FaultStates = 1; //EPS系统故障状态
+}
+
+
+//ELD信息
+message ELD_Info
+{
+optional uint32 ELDFaultSts = 1; //ELD故障状态
+}
+
+
+//ECU信息
+message ECU_Info
+{
+optional uint32 ECMD_48V_FaultStates = 1; //48V系统故障
+}

@@ -1,0 +1,7 @@
+*.o
+
+/bin/PressureTest
+/bin/lib*
+/bin/logs
+
+/build
